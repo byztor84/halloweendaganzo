@@ -1,0 +1,134 @@
+[
+  {
+    "id": "casa-1",
+    "title": "La Mansión de los Espíritus",
+    "street": "Calle de la Villa, 4",
+    "coords": [
+      40.5448,
+      -3.4572
+    ],
+    "category": "terror",
+    "iconId": "fantasma",
+    "icon": "👻",
+    "hours": "19:00 - 23:00",
+    "hasCandies": true,
+    "kidsFriendly": false,
+    "inContest": true,
+    "votes": 42,
+    "image": "https://images.unsplash.com/photo-1509114397022-ed747cca3f65?auto=format&fit=crop&w=700&q=80",
+    "description": "Pasaje del terror con actores en vivo, humo niebla y reparto de caramelos en el jardín.",
+    "status": "approved",
+    "ownerName": "Comisión Vecinal Daganzo",
+    "ownerContact": "600111222"
+  },
+  {
+    "id": "casa-2",
+    "title": "La Casa de las Chuches Encantadas",
+    "street": "Calle Mayor, 18",
+    "coords": [
+      40.5435,
+      -3.4565
+    ],
+    "category": "caramelos",
+    "iconId": "caramelo",
+    "icon": "🍬",
+    "hours": "18:00 - 21:30",
+    "hasCandies": true,
+    "kidsFriendly": true,
+    "inContest": true,
+    "votes": 39,
+    "image": "https://images.unsplash.com/photo-1572059002053-8cc5ad2f4a38?auto=format&fit=crop&w=700&q=80",
+    "description": "Reparto de chuches y golosinas sin gluten para todos los peques de Daganzo.",
+    "status": "approved",
+    "ownerName": "Familia García",
+    "ownerContact": "600222333"
+  },
+  {
+    "id": "casa-3",
+    "title": "El Refugio de los Vampiros",
+    "street": "Calle San Vicente, 12",
+    "coords": [
+      40.5458,
+      -3.4589
+    ],
+    "category": "concurso",
+    "iconId": "calabaza",
+    "icon": "🎃",
+    "hours": "19:30 - 22:30",
+    "hasCandies": true,
+    "kidsFriendly": true,
+    "inContest": true,
+    "votes": 56,
+    "image": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=700&q=80",
+    "description": "Fachada completa esculpida a mano con cementerio temático y photocall para familias.",
+    "status": "approved",
+    "ownerName": "Familia Moreno",
+    "ownerContact": "600333444"
+  },
+  {
+    "id": "casa-4",
+    "title": "La Cueva de las Calabazas",
+    "street": "Camino de Fresnedillas, 7",
+    "coords": [
+      40.5422,
+      -3.4595
+    ],
+    "category": "infantil",
+    "iconId": "caldero",
+    "icon": "🫕",
+    "hours": "18:00 - 21:00",
+    "hasCandies": true,
+    "kidsFriendly": true,
+    "inContest": false,
+    "votes": 22,
+    "image": "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?auto=format&fit=crop&w=700&q=80",
+    "description": "Especial para los más peques (0 a 8 años). Sin sustos bruscos y con música festiva.",
+    "status": "approved",
+    "ownerName": "Vecinos Fresnedillas",
+    "ownerContact": "600444555"
+  },
+  {
+    "id": "casa-5",
+    "title": "El Manicomio Abandonado",
+    "street": "Calle Real, 25",
+    "coords": [
+      40.5462,
+      -3.4552
+    ],
+    "category": "terror",
+    "iconId": "calavera",
+    "icon": "💀",
+    "hours": "20:00 - 00:00",
+    "hasCandies": true,
+    "kidsFriendly": false,
+    "inContest": true,
+    "votes": 49,
+    "image": "https://images.unsplash.com/photo-1509198397868-475647b2a1e5?auto=format&fit=crop&w=700&q=80",
+    "description": "Efectos luminosos, sonidos tenebrosos y animatronics activados por movimiento.",
+    "status": "approved",
+    "ownerName": "Grupo Amigos Calle Real",
+    "ownerContact": "600555666"
+  },
+  {
+    "id": "casa-6",
+    "title": "La Parada del Truco o Trato",
+    "street": "Calle Constitución, 9",
+    "coords": [
+      40.5441,
+      -3.4538
+    ],
+    "category": "caramelos",
+    "iconId": "piruleta",
+    "icon": "🍭",
+    "hours": "18:30 - 22:00",
+    "hasCandies": true,
+    "kidsFriendly": true,
+    "inContest": false,
+    "votes": 29,
+    "image": "https://images.unsplash.com/photo-1476136236990-838240be4859?auto=format&fit=crop&w=700&q=80",
+    "description": "Ven disfrazado y di la frase mágica para llevarte una bolsa de dulces sorpresa.",
+    "status": "approved",
+    "ownerName": "Familia Serrano",
+    "ownerContact": "600666777"
+  }
+]
