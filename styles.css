@@ -392,10 +392,10 @@ body {
 /* Tarjetas de Acción de Cristal con Telarañas */
 .hero-cards-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 14px;
   width: 100%;
-  max-width: 820px;
+  max-width: 720px;
   margin-bottom: 32px;
 }
 
@@ -1221,10 +1221,6 @@ body {
   box-shadow: 0 0 20px var(--toxic-green-glow);
 }
 
-.pin-cat-concurso {
-  background: linear-gradient(135deg, #f59e0b, #b45309);
-  box-shadow: 0 0 22px rgba(245, 158, 11, 0.7);
-}
 
 .pin-inner-emoji {
   transform: rotate(45deg);
@@ -1530,26 +1526,6 @@ body {
   transform: translateY(-1px);
 }
 
-.btn-flyout-vote {
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid var(--border-glass);
-  color: #fff;
-  border-radius: var(--radius-md);
-  padding: 11px 16px;
-  font-family: var(--font-spooky);
-  font-size: 1.15rem;
-  letter-spacing: 1px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  transition: all 0.2s;
-  min-height: 44px;
-}
-
-.btn-flyout-vote:hover {
-  background: rgba(255, 255, 255, 0.15);
-}
 
 /* ========================================================
    MODALES (ESTILO CYBER-GOTHIC MODERNO)
@@ -2985,7 +2961,7 @@ body {
     flex-shrink: 0;
   }
 
-  .btn-flyout-checkin, .btn-flyout-vote {
+  .btn-flyout-checkin {
     padding: 10px 12px;
     font-size: 1rem;
     min-height: 44px;
@@ -3030,7 +3006,7 @@ body {
   }
 
   .hero-cards-grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 8px;
     width: 100%;
   }

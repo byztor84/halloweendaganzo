@@ -84,8 +84,6 @@ const DEFAULT_HOUSES = [
     hours: "19:00 - 23:30",
     hasCandies: true,
     kidsFriendly: false,
-    inContest: true,
-    votes: 42,
     image: "assets/haunted_mansion.jpg",
     description: "Pasaje interactivo con actores disfrazados, niebla ambiental y esqueletos gigantes."
   },
@@ -100,8 +98,6 @@ const DEFAULT_HOUSES = [
     hours: "18:00 - 21:30",
     hasCandies: true,
     kidsFriendly: true,
-    inContest: true,
-    votes: 38,
     image: PHOTO_PRESETS[1],
     description: "Reparto de chuches y golosinas sin gluten para todos los peques de Daganzo."
   },
@@ -110,14 +106,12 @@ const DEFAULT_HOUSES = [
     title: "El Refugio de los Vampiros",
     street: "Calle San Vicente, 12",
     coords: [40.5458, -3.4589],
-    category: "concurso",
+    category: "caramelos",
     iconId: "calabaza",
     icon: "🎃",
     hours: "19:30 - 22:30",
     hasCandies: true,
     kidsFriendly: true,
-    inContest: true,
-    votes: 56,
     image: PHOTO_PRESETS[2],
     description: "Fachada completa esculpida a mano con cementerio temático y photocall para familias."
   },
@@ -132,8 +126,6 @@ const DEFAULT_HOUSES = [
     hours: "18:00 - 21:00",
     hasCandies: true,
     kidsFriendly: true,
-    inContest: false,
-    votes: 21,
     image: PHOTO_PRESETS[3],
     description: "Especial para los más peques (0 a 8 años). Sin sustos bruscos y con música festiva."
   },
@@ -148,8 +140,6 @@ const DEFAULT_HOUSES = [
     hours: "20:00 - 00:00",
     hasCandies: true,
     kidsFriendly: false,
-    inContest: true,
-    votes: 49,
     image: PHOTO_PRESETS[4],
     description: "Efectos luminosos, sonidos tenebrosos y animatronics activados por movimiento."
   },
@@ -164,8 +154,6 @@ const DEFAULT_HOUSES = [
     hours: "18:30 - 22:00",
     hasCandies: true,
     kidsFriendly: true,
-    inContest: false,
-    votes: 29,
     image: PHOTO_PRESETS[5],
     description: "Ven disfrazado y di la frase mágica para llevarte una bolsa de dulces sorpresa."
   }
@@ -288,7 +276,6 @@ class HouseStore {
   async add(houseData) {
     const newHouse = {
       id: `casa-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-      votes: 0,
       createdAt: new Date().toISOString(),
       status: 'pending', // ¡En revisión por el administrador!
       ...houseData
@@ -389,7 +376,6 @@ class HalloweenApp {
     this.state = {
       alias: localStorage.getItem('daganzo_alias') || 'Vecino Valiente',
       visited: JSON.parse(localStorage.getItem('daganzo_visited') || '[]'),
-      voted: JSON.parse(localStorage.getItem('daganzo_voted') || '{}'),
       isAdminLoggedIn: sessionStorage.getItem('daganzo_admin_auth') === 'true'
     };
 
@@ -601,7 +587,6 @@ class HalloweenApp {
             <p>📍 ${h.street}</p>
             <div class="side-house-meta">
               <span>🕒 ${h.hours || '19:00 - 22:30'}</span>
-              <span style="color: var(--gold);">⭐ ${h.votes}</span>
               ${isVisited ? '<span style="color: var(--emerald);">✓ Visitada</span>' : ''}
             </div>
           </div>
@@ -635,7 +620,6 @@ class HalloweenApp {
     document.getElementById('cardTitle').innerHTML = `<span style="font-size:1.3rem;">${iconEmoji}</span> ${house.title}`;
     document.getElementById('cardStreet').textContent = `📍 ${house.street}`;
     document.getElementById('cardHours').textContent = `🕒 ${house.hours || '19:00 - 22:30'}`;
-    document.getElementById('cardVotes').textContent = `⭐ ${house.votes} votos`;
     document.getElementById('cardDesc').textContent = house.description;
 
     // Check-in botón (letras blancas nítidas con alto contraste)
@@ -649,17 +633,6 @@ class HalloweenApp {
       checkinBtn.innerHTML = '<span>🎃 Marcar Visitada</span>';
       checkinBtn.style.background = 'linear-gradient(135deg, #ff5500, #e03100)';
       checkinBtn.style.color = '#ffffff';
-    }
-
-    // Votar botón
-    const voteBtn = document.getElementById('btnCardVote');
-    const hasVoted = this.state.voted[house.id];
-    if (hasVoted) {
-      voteBtn.innerHTML = '<span>★ Voto emitido</span>';
-      voteBtn.style.opacity = '0.6';
-    } else {
-      voteBtn.innerHTML = '<span>⭐ Votar</span>';
-      voteBtn.style.opacity = '1';
     }
 
     // Botón Ver en el mapa
@@ -1705,7 +1678,7 @@ class HalloweenApp {
               <img class="admin-thumb" src="${h.image}" alt="">
               <div class="admin-info">
                 <h4>${h.title}</h4>
-                <p>📍 ${h.street} • ⭐ ${h.votes} votos</p>
+                <p>📍 ${h.street}</p>
               </div>
               <div class="admin-btns">
                 <button class="btn-icon-admin" title="Ver en mapa" onclick="window.app.adminFocusHouse('${h.id}')">👁️</button>
@@ -1876,7 +1849,6 @@ class HalloweenApp {
     f.elements['editStreet'].value = house.street;
     f.elements['editCategory'].value = house.category;
     f.elements['editHours'].value = house.hours || '19:00 - 22:30';
-    f.elements['editVotes'].value = house.votes || 0;
     f.elements['editDesc'].value = house.description;
     f.elements['editImage'].value = house.image;
 
@@ -1935,7 +1907,6 @@ class HalloweenApp {
       iconId: chosenIconItem.id,
       icon: chosenIconItem.emoji,
       hours: f.elements['editHours'].value,
-      votes: parseInt(f.elements['editVotes'].value) || 0,
       description: f.elements['editDesc'].value,
       image: f.elements['editImage'].value || PHOTO_PRESETS[0],
       coords: this.tempCoords
@@ -2071,27 +2042,6 @@ class HalloweenApp {
     this.openHouseCard(this.selectedHouse);
   }
 
-  voteCurrent() {
-    if (!this.selectedHouse) return;
-    const id = this.selectedHouse.id;
-
-    if (this.state.voted[id]) {
-      this.showToast('Ya has votado por esta decoración.');
-      return;
-    }
-
-    this.selectedHouse.votes = (this.selectedHouse.votes || 0) + 1;
-    this.store.update(id, { votes: this.selectedHouse.votes });
-
-    this.state.voted[id] = true;
-    localStorage.setItem('daganzo_voted', JSON.stringify(this.state.voted));
-
-    window.spookyAudio?.playStinger('unlock');
-    this.showToast(`¡Voto sumado para ${this.selectedHouse.title}! ⭐`);
-    this.openHouseCard(this.selectedHouse);
-    this.renderPodium();
-  }
-
   updatePassCounters() {
     const total = this.store.getAll().length;
     const visited = this.state.visited.length;
@@ -2184,28 +2134,7 @@ class HalloweenApp {
     }
   }
 
-  // ========================================================
-  // SALÓN DE LA FAMA (PODIO)
-  // ========================================================
-  renderPodium() {
-    const list = document.getElementById('podiumList');
-    if (!list) return;
 
-    const sorted = [...this.store.getAll()].sort((a, b) => b.votes - a.votes).slice(0, 5);
-    const medals = ['🥇', '🥈', '🥉', '4º', '5º'];
-
-    list.innerHTML = sorted.map((h, i) => `
-      <div class="admin-house-item" style="cursor: pointer;" onclick="window.app.adminFocusHouse('${h.id}')">
-        <div style="font-size: 1.4rem; width: 32px; text-align: center;">${medals[i]}</div>
-        <img class="admin-thumb" src="${h.image}" alt="">
-        <div class="admin-info">
-          <h4>${h.title}</h4>
-          <p>📍 ${h.street}</p>
-        </div>
-        <div style="color: var(--pumpkin); font-weight: 700; font-size: 0.95rem;">⭐ ${h.votes}</div>
-      </div>
-    `).join('');
-  }
 
   // ========================================================
   // LOCALIZACIÓN DEL MÓVIL: "ESTOY AQUÍ"
@@ -2354,7 +2283,6 @@ class HalloweenApp {
       if (id === 'modalApunta') this.initWizard();
       if (id === 'modalAdmin') this.renderAdminView();
       if (id === 'modalPass') this.updatePassCounters();
-      if (id === 'modalPodio') this.renderPodium();
     }
   }
 
@@ -2409,10 +2337,6 @@ class HalloweenApp {
       this.openModal('modalPass');
     });
 
-    document.getElementById('btnHomePodio')?.addEventListener('click', () => {
-      this.openModal('modalPodio');
-    });
-
     document.getElementById('btnHomeAdmin')?.addEventListener('click', () => {
       this.openModal('modalAdmin');
     });
@@ -2464,11 +2388,6 @@ class HalloweenApp {
     document.getElementById('optShareMap')?.addEventListener('click', () => {
       this.toggleMapOptions(false);
       this.shareMap();
-    });
-
-    document.getElementById('optPodio')?.addEventListener('click', () => {
-      this.toggleMapOptions(false);
-      this.openModal('modalPodio');
     });
 
     document.getElementById('optPassport')?.addEventListener('click', () => {
@@ -2586,10 +2505,6 @@ class HalloweenApp {
 
     document.getElementById('btnCardCheckin')?.addEventListener('click', () => {
       this.toggleCheckinCurrent();
-    });
-
-    document.getElementById('btnCardVote')?.addEventListener('click', () => {
-      this.voteCurrent();
     });
 
     document.getElementById('btnCardViewOnMap')?.addEventListener('click', () => {

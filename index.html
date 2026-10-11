@@ -132,12 +132,6 @@
           <h3>Pasaporte</h3>
           <p>Check-in y diploma digital</p>
         </div>
-
-        <div id="btnHomePodio" class="hero-action-card">
-          <div class="hero-action-icon" style="color: var(--gold-star);">🏆</div>
-          <h3>Podio Vecinal</h3>
-          <p>Votaciones y ranking en vivo</p>
-        </div>
       </div>
 
       <!-- BOTÓN ADMIN DISCRETO -->
@@ -263,16 +257,7 @@
             </div>
           </button>
 
-          <!-- 5. Salón de la Fama -->
-          <button id="optPodio" type="button" class="options-menu-item">
-            <div class="opt-icon-badge opt-badge-yellow">🏆</div>
-            <div class="opt-text-wrap">
-              <div class="opt-title">Salón de la Fama</div>
-              <div class="opt-desc">Ranking de las casas más votadas y terroríficas</div>
-            </div>
-          </button>
-
-          <!-- 6. Pasaporte y Diploma -->
+          <!-- 5. Pasaporte y Diploma -->
           <button id="optPassport" type="button" class="options-menu-item">
             <div class="opt-icon-badge opt-badge-green">📜</div>
             <div class="opt-text-wrap">
@@ -316,7 +301,6 @@
           <button class="tag-pill" data-filter="caramelos">🍬 Caramelos</button>
           <button class="tag-pill" data-filter="terror">👻 Pasajes</button>
           <button class="tag-pill" data-filter="infantil">👶 Peques</button>
-          <button class="tag-pill" data-filter="concurso">🏆 Concurso</button>
         </div>
       </div>
 
@@ -369,7 +353,6 @@
 
           <div class="flyout-chips-row">
             <span id="cardHours" class="chip-stat">🕒 19:00 - 22:30</span>
-            <span id="cardVotes" class="chip-stat" style="color: var(--gold-star);">⭐ 0 votos</span>
           </div>
 
           <p id="cardDesc" class="flyout-desc">Descripción...</p>
@@ -381,9 +364,6 @@
           <div class="flyout-actions">
             <button id="btnCardCheckin" class="btn-flyout-checkin">
               <span>🎃 Marcar Visitada</span>
-            </button>
-            <button id="btnCardVote" class="btn-flyout-vote">
-              <span>⭐ Votar</span>
             </button>
           </div>
         </div>
@@ -889,18 +869,12 @@
             <option value="caramelos">🍬 Caramelos / Truco o Trato</option>
             <option value="terror">👻 Pasaje Terror</option>
             <option value="infantil">👶 Para Peques</option>
-            <option value="concurso">🏆 En Concurso</option>
           </select>
         </div>
 
         <div class="input-row">
           <label for="editHours">Horario:</label>
           <input type="text" id="editHours" name="editHours" class="form-control-input">
-        </div>
-
-        <div class="input-row">
-          <label for="editVotes">Votos:</label>
-          <input type="number" id="editVotes" name="editVotes" class="form-control-input">
         </div>
 
         <div class="input-row">
@@ -958,25 +932,7 @@
     </div>
   </div>
 
-  <!-- ========================================================
-       MODAL 5: SALÓN DE LA FAMA (PODIO)
-       ======================================================== -->
-  <div id="modalPodio" class="modal-backdrop">
-    <div class="modal-sheet">
-      <div class="modal-top">
-        <h2><span>🏆</span> Salón de la Fama Vecinal</h2>
-        <button class="btn-modal-close">&times;</button>
-      </div>
 
-      <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
-        Las decoraciones más votadas por los vecinos en tiempo real durante Halloween:
-      </p>
-
-      <div id="podiumList" class="admin-houses-list">
-        <!-- Renderizado dinámicamente -->
-      </div>
-    </div>
-  </div>
 
   <!-- ========================================================
        MODAL 6: COMPARTIR MAPA (WHATSAPP, COPIAR, RRSS)

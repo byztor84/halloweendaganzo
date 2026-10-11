@@ -9,7 +9,7 @@ Plataforma web interactiva, moderna y temática para el evento de Halloween de *
 1. **🗺️ Mapa Interactivo Nocturno (Leaflet.js + CartoDB Dark Matter):**
    * Centrado en las calles de Daganzo de Arriba (`40.5447, -3.4575`).
    * Marcadores SVG temáticos personalizados con efectos de pulso, iconos de categoría y distinción de casas visitadas.
-   * Drawer inferior deslizante (*bottom sheet*) con información detallada, foto, horarios, votaciones y descripción.
+   * Drawer inferior deslizante (*bottom sheet*) con información detallada, foto, horarios y descripción.
 
 2. **🎃 "Halloween Pass" (Pasaporte del Terror Vecinal y Gamificación):**
    * Sistema de check-in para marcar las casas visitadas en la ruta.
@@ -17,28 +17,24 @@ Plataforma web interactiva, moderna y temática para el evento de Halloween de *
    * Desbloqueo de insignias por mérito (*Novato Valiente*, *Rey del Dulce*, *Leyenda Espectral*).
    * **Generador de Diploma Digital Oficial en Canvas (1200x800)** con el alias del vecino, sellos de Daganzo y botón de descarga directa en PNG.
 
-3. **⭐ Sistema de Votación Popular en Tiempo Real & Podio:**
-   * Los vecinos pueden votar por sus decoraciones favoritas directamente desde la ficha de cada casa.
-   * Sección **Salón de la Fama / Podio** con el ranking en directo de las casas más votadas.
-
-4. **🔊 Modo Inmersivo de Audio (Web Audio API):**
+3. **🔊 Modo Inmersivo de Audio (Web Audio API):**
    * Sintetizador ambiental terrorífico con aullidos de viento espectral, campanas de medianoche y latidos siniestros.
    * Sin archivos MP3 pesados externos ni problemas de CORS.
    * Botón flotante para activar/desactivar con un toque.
 
-5. **🦇 Efectos Visuales y Ambientación:**
+4. **🦇 Efectos Visuales y Ambientación:**
    * Pantalla de bienvenida (*Splash Screen*) con niebla animada y botón de entrada.
    * Murciélagos animados cruzando sutilmente la pantalla.
    * Paleta de colores oficial: *Pumpkin Orange*, *Spectral Purple*, *Midnight Black* y *Toxic Green*.
 
-6. **➕ Registro Vecinal ("Apunta tu Casa"):**
+5. **➕ Registro Vecinal ("Apunta tu Casa"):**
    * Formulario guiado con selección de temática, horarios, categorías y descripción.
    * **Selector interactivo en el mapa**: haz clic en cualquier calle de Daganzo para colocar el pin de tu casa con precisión GPS.
-   * Guardado inmediato en `LocalStorage` (visible al instante en el mapa).
+   * Guardado con validación y moderación de administrador.
 
-7. **🎯 Filtros Rápidos y Buscador en Vivo:**
+6. **🎯 Filtros Rápidos y Buscador en Vivo:**
    * Búsqueda por nombre o calle en tiempo real.
-   * Filtros temáticos: *🍬 Caramelos / Truco o Trato*, *👻 Pasajes del Terror*, *👶 Para Peques (Sin sustos)* y *🏆 En Concurso*.
+   * Filtros temáticos: *🍬 Caramelos / Truco o Trato*, *👻 Pasajes del Terror* y *👶 Para Peques (Sin sustos)*.
 
 ---
 
