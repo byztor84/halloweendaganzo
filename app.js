@@ -1641,7 +1641,7 @@ class HalloweenApp {
                   💬 WhatsApp
                 </a>
               ` : ''}
-              <button class="btn-admin-action btn-admin-reject" title="Eliminar este vecino" onclick="window.app.adminDeleteUser('${u.id || u.email}', '${(u.name || '').replace(/'/g, "\\'")}')">
+              <button class="btn-admin-action btn-admin-reject btn-delete-user" title="Eliminar este vecino" data-user-id="${u.id || ''}" data-user-email="${u.email || ''}" data-user-name="${encodeURIComponent(u.name || '')}">
                 🗑️ Eliminar Vecino
               </button>
             </div>
@@ -1692,6 +1692,18 @@ class HalloweenApp {
         </div>
       `;
     }).join('');
+
+    // Asignar listeners a los botones de borrar usuario de forma segura
+    list.querySelectorAll('.btn-delete-user').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const userId = btn.getAttribute('data-user-id');
+        const userEmail = btn.getAttribute('data-user-email');
+        const userName = decodeURIComponent(btn.getAttribute('data-user-name') || 'Vecino');
+        this.adminDeleteUser({ id: userId, email: userEmail, name: userName });
+      });
+    });
   }
 
   getUserHouses(user) {
@@ -1706,46 +1718,75 @@ class HalloweenApp {
     });
   }
 
-  async adminDeleteUser(userId, userName) {
-    if (!confirm(`¿Estás seguro de que deseas eliminar permanentemente al vecino "${userName}" de la base de datos?`)) {
+  async adminDeleteUser(userParam, userNameFallback) {
+    let userId = '';
+    let userEmail = '';
+    let userName = userNameFallback || 'Vecino';
+
+    if (typeof userParam === 'object' && userParam !== null) {
+      userId = userParam.id || '';
+      userEmail = userParam.email || '';
+      userName = userParam.name || userNameFallback || 'Vecino';
+    } else {
+      userId = userParam || '';
+      userEmail = userParam || '';
+    }
+
+    if (!confirm(`¿Estás seguro de que deseas eliminar permanentemente al vecino "${userName}"?`)) {
       return;
     }
 
+    // 1. Llamar a la API Node (si está disponible)
     try {
-      const res = await fetch('/api/admin/users/delete', {
+      await fetch('/api/admin/users/delete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: userId })
+        body: JSON.stringify({ id: userId || userEmail, email: userEmail })
       });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.ok) {
-          this.showToast(`🗑️ Usuario "${userName}" eliminado correctamente.`);
-        }
-      }
     } catch (e) {}
 
-    // Guardar en lista negra de eliminados
+    // 2. Registrar identificadores en lista negra persistente (para GitHub Pages y refrescos)
     try {
       let deletedList = JSON.parse(localStorage.getItem('daganzo_deleted_users_v1') || '[]');
       if (userId && !deletedList.includes(userId)) deletedList.push(userId);
+      if (userEmail && !deletedList.includes(userEmail)) deletedList.push(userEmail);
+      if (userEmail && !deletedList.includes(userEmail.toLowerCase())) deletedList.push(userEmail.toLowerCase());
       localStorage.setItem('daganzo_deleted_users_v1', JSON.stringify(deletedList));
     } catch (e) {}
 
-    // Limpieza también en local
-    if (this.currentUser && (this.currentUser.id === userId || this.currentUser.email === userId)) {
-      this.currentUser = null;
-      localStorage.removeItem('daganzo_user');
-      this.updateUserSessionUI();
+    // 3. Limpiar sesión actual si coincide
+    if (this.currentUser) {
+      const matchCurrent = (userId && this.currentUser.id === userId) ||
+                           (userEmail && this.currentUser.email && this.currentUser.email.toLowerCase() === userEmail.toLowerCase());
+      if (matchCurrent) {
+        this.currentUser = null;
+        localStorage.removeItem('daganzo_user');
+        this.updateUserSessionUI();
+      }
     }
+
+    // 4. Limpiar de localStorage daganzo_users
     try {
       let localUsers = JSON.parse(localStorage.getItem('daganzo_users') || '[]');
-      localUsers = localUsers.filter(u => u.id !== userId && u.email !== userId);
+      localUsers = localUsers.filter(u => {
+        if (userId && u.id === userId) return false;
+        if (userEmail && u.email && u.email.toLowerCase() === userEmail.toLowerCase()) return false;
+        return true;
+      });
       localStorage.setItem('daganzo_users', JSON.stringify(localUsers));
     } catch (e) {}
 
-    this.showToast(`🗑️ Vecino "${userName}" eliminado.`);
-    this.loadAdminUsers();
+    // 5. Actualizar en memoria inmediatamente
+    if (Array.isArray(this.adminLoadedUsers)) {
+      this.adminLoadedUsers = this.adminLoadedUsers.filter(u => {
+        if (userId && u.id === userId) return false;
+        if (userEmail && u.email && u.email.toLowerCase() === userEmail.toLowerCase()) return false;
+        return true;
+      });
+    }
+
+    this.showToast(`🗑️ Vecino "${userName}" eliminado con éxito.`);
+    await this.loadAdminUsers();
   }
 
   exportBackupJSON() {
