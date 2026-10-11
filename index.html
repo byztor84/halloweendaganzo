@@ -764,66 +764,120 @@
   </div>
 
   <!-- ========================================================
-       MODAL 2: PANEL DE ADMINISTRACIÓN Y MODERACIÓN
+       MODAL 2: PANEL DE ADMINISTRACIÓN Y MODERACIÓN (DASHBOARD)
        ======================================================== -->
   <div id="modalAdmin" class="modal-backdrop">
-    <div class="modal-sheet" style="max-width: 640px;">
+    <div class="modal-sheet admin-dashboard-sheet">
       <div class="modal-top">
-        <h2><span>🛡️</span> Administración</h2>
-        <button class="btn-modal-close">&times;</button>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div class="admin-top-shield-icon">🛡️</div>
+          <div>
+            <h2 style="margin: 0; line-height: 1.2;">Panel de Control Oficial</h2>
+            <div style="font-size: 0.76rem; color: #a8a29e;">Moderación Vecinal & Gestión • Halloween Daganzo 2026</div>
+          </div>
+        </div>
+        <button class="btn-modal-close" title="Cerrar panel">&times;</button>
       </div>
 
       <!-- Pantalla de Login con PIN -->
       <div id="adminLoginBox" class="admin-login-box">
-        <div style="font-size: 2.5rem; margin-bottom: 8px;">🔐</div>
-        <h3 style="color: #fff; margin-bottom: 6px; font-family: var(--font-spooky); font-size: 1.6rem; letter-spacing: 1px;">Acceso Administrador</h3>
-        <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 16px;">
+        <div style="font-size: 2.8rem; margin-bottom: 8px;">🔐</div>
+        <h3 style="color: #fff; margin-bottom: 6px; font-family: var(--font-spooky); font-size: 1.7rem; letter-spacing: 1px;">Acceso Administrador</h3>
+        <p style="font-size: 0.84rem; color: var(--text-muted); margin-bottom: 16px;">
           Introduce el PIN de moderación (PIN por defecto: <b>1234</b>)
         </p>
         <div style="display: flex; gap: 8px; max-width: 280px; margin: 0 auto 10px auto;">
-          <input type="password" id="adminPinInput" class="form-control-input" placeholder="PIN" style="text-align: center;">
+          <input type="password" id="adminPinInput" class="form-control-input" placeholder="PIN" style="text-align: center; font-size: 1.1rem; letter-spacing: 4px;">
           <button id="btnAdminLogin" class="hud-btn hud-btn-primary">Entrar</button>
         </div>
       </div>
 
-      <!-- Dashboard del Admin -->
+      <!-- Dashboard del Admin Completo -->
       <div id="adminDashboardBox" style="display: none;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid var(--border-glass); padding-bottom: 12px;">
-          <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-            <button id="adminTabBtnPending" class="hud-btn active" style="font-size: 0.78rem; height: 34px;">
-              ⏳ Pendientes (<b id="adminBadgePending">0</b>)
-            </button>
-            <button id="adminTabBtnApproved" class="hud-btn" style="font-size: 0.78rem; height: 34px;">
-              🏚️ Publicadas (<b id="adminBadgeApproved">6</b>)
-            </button>
-            <button id="adminTabBtnUsers" class="hud-btn" style="font-size: 0.78rem; height: 34px;">
-              👥 Vecinos (<b id="adminBadgeUsers">1</b>)
-            </button>
+        <!-- Barra de KPIs (Métricas Rápidas en Vivo) -->
+        <div class="admin-kpi-grid">
+          <div class="admin-kpi-card" onclick="window.app.setAdminTab('approved')">
+            <div class="kpi-icon" style="color: #ff8800;">🏚️</div>
+            <div class="kpi-content">
+              <span class="kpi-num" id="kpiApproved">0</span>
+              <span class="kpi-label">Casas Publicadas</span>
+            </div>
           </div>
-          <div style="display: flex; gap: 6px;">
-            <button id="btnAdminResetHouses" class="hud-btn" style="height: 34px; font-size: 0.74rem;">🔄 Muestra</button>
-            <button id="btnAdminLogout" class="hud-btn" style="height: 34px; font-size: 0.74rem;">Salir</button>
+          <div class="admin-kpi-card" onclick="window.app.setAdminTab('pending')">
+            <div class="kpi-icon" style="color: #f59e0b;">⏳</div>
+            <div class="kpi-content">
+              <span class="kpi-num" id="kpiPending">0</span>
+              <span class="kpi-label">En Revisión</span>
+            </div>
+          </div>
+          <div class="admin-kpi-card" onclick="window.app.setAdminTab('users')">
+            <div class="kpi-icon" style="color: #a855f7;">👥</div>
+            <div class="kpi-content">
+              <span class="kpi-num" id="kpiUsers">0</span>
+              <span class="kpi-label">Vecinos Registrados</span>
+            </div>
+          </div>
+          <div class="admin-kpi-card">
+            <div class="kpi-icon" style="color: #06b6d4;">🍬</div>
+            <div class="kpi-content">
+              <span class="kpi-num" id="kpiCandies">0</span>
+              <span class="kpi-label">Puntos Chuches</span>
+            </div>
           </div>
         </div>
 
-        <!-- Vista 1: Solicitudes Pendientes -->
-        <div id="adminViewPending" class="admin-tab-view">
-          <div id="adminPendingList" class="admin-houses-list">
-            <!-- Renderizado dinámicamente -->
+        <!-- Barra de Herramientas: Pestañas + Buscador + Acciones -->
+        <div class="admin-toolbar-row">
+          <div class="admin-nav-tabs">
+            <button id="adminTabBtnApproved" class="admin-tab-nav-btn active" type="button" onclick="window.app.setAdminTab('approved')">
+              <span>🏚️ Casas Publicadas</span>
+              <span class="tab-badge" id="adminBadgeApproved">0</span>
+            </button>
+            <button id="adminTabBtnPending" class="admin-tab-nav-btn" type="button" onclick="window.app.setAdminTab('pending')">
+              <span>⏳ Solicitudes Pendientes</span>
+              <span class="tab-badge badge-pending" id="adminBadgePending">0</span>
+            </button>
+            <button id="adminTabBtnUsers" class="admin-tab-nav-btn" type="button" onclick="window.app.setAdminTab('users')">
+              <span>👥 Vecinos Registrados</span>
+              <span class="tab-badge" id="adminBadgeUsers">0</span>
+            </button>
+          </div>
+
+          <div class="admin-toolbar-actions">
+            <div class="admin-search-wrap">
+              <span class="search-icon">🔍</span>
+              <input type="text" id="adminSearchInput" class="admin-search-input" placeholder="Buscar casa, vecino o calle...">
+            </div>
+            <button id="btnAdminAddNewHouse" type="button" class="hud-btn hud-btn-primary" style="height: 38px; font-size: 0.8rem; padding: 0 12px;" title="Añadir una casa directamente">
+              ➕ Nueva Casa
+            </button>
+            <button id="btnAdminExportBackup" type="button" class="hud-btn" style="height: 38px; font-size: 0.8rem; padding: 0 10px;" title="Descargar copia de seguridad en JSON">
+              📥 Backup JSON
+            </button>
+            <button id="btnAdminResetHouses" type="button" class="hud-btn" style="height: 38px; font-size: 0.8rem; padding: 0 10px;" title="Restablecer casas por defecto">
+              🔄 Muestra
+            </button>
+            <button id="btnAdminLogout" type="button" class="hud-btn" style="height: 38px; font-size: 0.8rem; padding: 0 10px; background: rgba(239,68,68,0.15); border-color: rgba(239,68,68,0.4); color: #fca5a5;">
+              Salir
+            </button>
           </div>
         </div>
 
-        <!-- Vista 2: Casas Aprobadas / Publicadas -->
-        <div id="adminViewApproved" class="admin-tab-view" style="display: none;">
-          <div id="adminHousesList" class="admin-houses-list">
-            <!-- Renderizado dinámicamente -->
+        <!-- Contenedores de las Pestañas -->
+        <div class="admin-tab-content-area">
+          <!-- Vista 1: Solicitudes Pendientes -->
+          <div id="adminViewPending" class="admin-tab-view" style="display: none;">
+            <div id="adminPendingList" class="admin-houses-list"></div>
           </div>
-        </div>
 
-        <!-- Vista 3: Vecinos Registrados -->
-        <div id="adminViewUsers" class="admin-tab-view" style="display: none;">
-          <div id="adminUsersList" class="admin-houses-list">
-            <!-- Renderizado dinámicamente -->
+          <!-- Vista 2: Casas Aprobadas / Publicadas -->
+          <div id="adminViewApproved" class="admin-tab-view">
+            <div id="adminHousesList" class="admin-houses-list"></div>
+          </div>
+
+          <!-- Vista 3: Vecinos Registrados -->
+          <div id="adminViewUsers" class="admin-tab-view" style="display: none;">
+            <div id="adminUsersList" class="admin-houses-list"></div>
           </div>
         </div>
       </div>
