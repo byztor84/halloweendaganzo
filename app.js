@@ -1444,6 +1444,7 @@ class HalloweenApp {
       document.getElementById('adminTabBtnPending')?.classList.add('active');
       const v = document.getElementById('adminViewPending');
       if (v) v.style.display = 'block';
+      this.renderAdminView();
     } else if (tabName === 'users') {
       document.getElementById('adminTabBtnUsers')?.classList.add('active');
       const v = document.getElementById('adminViewUsers');
@@ -1453,6 +1454,7 @@ class HalloweenApp {
       document.getElementById('adminTabBtnApproved')?.classList.add('active');
       const v = document.getElementById('adminViewApproved');
       if (v) v.style.display = 'block';
+      this.renderAdminView();
     }
   }
 
@@ -1484,97 +1486,187 @@ class HalloweenApp {
   async loadAdminUsers() {
     const list = document.getElementById('adminUsersList');
     if (!list) return;
+
+    list.innerHTML = `
+      <div style="text-align: center; padding: 28px; color: var(--text-muted);">
+        <div style="font-size: 1.6rem; margin-bottom: 6px;">⏳</div>
+        <p>Cargando censo de vecinos registrados...</p>
+      </div>
+    `;
+
+    let users = [];
+
+    // 1. Intentar desde la API Node
     try {
       const res = await fetch('/api/users');
       if (res.ok) {
         const data = await res.json();
-        if (data.ok && Array.isArray(data.users)) {
-          const badge = document.getElementById('adminBadgeUsers');
-          if (badge) badge.textContent = data.users.length;
-          if (data.users.length === 0) {
-            list.innerHTML = `<div style="text-align:center; padding:34px; color:var(--text-muted);">No hay vecinos registrados aún en la base de datos</div>`;
-            return;
-          }
-          list.innerHTML = data.users.map(u => {
-            const houses = u.houses || [];
-            const cleanPhone = (u.phone || '').replace(/\D/g, '');
-            const hasPhone = cleanPhone.length >= 9;
-
-            return `
-              <div class="admin-user-card" data-user-id="${u.id}">
-                <!-- Cabecera del Usuario -->
-                <div class="admin-user-header">
-                  <div class="admin-user-avatar">👤</div>
-                  <div class="admin-user-info">
-                    <div class="admin-user-name-row">
-                      <h3>${u.name}</h3>
-                      <span class="user-badge">${houses.length > 0 ? `🎃 ${houses.length} casa(s)` : 'Sin casa apuntada'}</span>
-                    </div>
-                    <div class="admin-user-meta">
-                      <span>✉️ Email: <b>${u.email}</b></span>
-                      <span>📞 Teléfono: <b>${u.phone || 'No indicado'}</b></span>
-                      <span>📅 Registrado: ${new Date(u.createdAt || Date.now()).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                    </div>
-                  </div>
-                  <div class="admin-user-quick-actions">
-                    ${hasPhone ? `
-                      <a href="https://wa.me/34${cleanPhone}" target="_blank" class="btn-whatsapp-action" title="Abrir chat de WhatsApp con este vecino">
-                        💬 WhatsApp
-                      </a>
-                    ` : ''}
-                    <button class="btn-admin-action btn-admin-reject" title="Eliminar este usuario de la base de datos" onclick="window.app.adminDeleteUser('${u.id}', '${(u.name || '').replace(/'/g, "\\'")}')">
-                      🗑️ Eliminar
-                    </button>
-                  </div>
-                </div>
-
-                <!-- Casas Vinculadas al Usuario -->
-                <div class="admin-user-houses-box">
-                  <div style="font-size: 0.76rem; font-weight: 700; color: #e2e8f0; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
-                    <span>🏚️ Casas asociadas a este vecino:</span>
-                    <span style="font-size: 0.7rem; color: #a855f7;">${houses.length} registrada(s)</span>
-                  </div>
-
-                  ${houses.length === 0 ? `
-                    <div class="admin-no-house-hint">
-                      ℹ️ Este vecino se ha registrado pero aún no ha inscrito ninguna casa en el mapa.
-                    </div>
-                  ` : `
-                    <div class="admin-user-houses-list">
-                      ${houses.map(h => `
-                        <div class="admin-linked-house-row">
-                          <span class="house-icon">${h.icon || '🎃'}</span>
-                          <div class="house-details">
-                            <strong class="house-title">${h.title}</strong>
-                            <div class="house-address">📍 <b>${h.street}</b> • 🕒 ${h.hours || 'Horario no indicado'}</div>
-                            <div class="house-tags">
-                              <span class="house-status-badge ${h.status === 'approved' ? 'status-approved' : 'status-pending'}">
-                                ${h.status === 'approved' ? '🏚️ Publicada en el mapa' : '⏳ Pendiente de moderación'}
-                              </span>
-                              <span class="house-cat-tag">Temática: ${h.category}</span>
-                            </div>
-                          </div>
-                          <div style="display: flex; gap: 6px; align-items: center;">
-                            <button class="btn-view-house-link" onclick="window.app.adminFocusHouse('${h.id}')" title="Ver en el mapa">
-                              🗺️ Ver en Mapa
-                            </button>
-                            <button class="btn-icon-admin btn-icon-delete" onclick="window.app.adminDeleteHouse('${h.id}')" title="Eliminar casa de este vecino" style="padding: 6px 10px; font-size: 0.85rem; border-radius: var(--radius-sm); border: 1px solid rgba(239, 68, 68, 0.4); cursor: pointer;">
-                              🗑️
-                            </button>
-                          </div>
-                        </div>
-                      `).join('')}
-                    </div>
-                  `}
-                </div>
-              </div>
-            `;
-          }).join('');
+        if (data.ok && Array.isArray(data.users) && data.users.length > 0) {
+          users = data.users;
         }
       }
-    } catch (e) {
-      list.innerHTML = `<div style="color:var(--text-muted); padding:20px;">No se pudo cargar la lista de vecinos</div>`;
+    } catch (e) {}
+
+    // 2. Si falló (ej: GitHub Pages estático), cargar de data/users.json
+    if (users.length === 0) {
+      try {
+        const staticRes = await fetch('./data/users.json');
+        if (staticRes.ok) {
+          const staticUsers = await staticRes.json();
+          if (Array.isArray(staticUsers) && staticUsers.length > 0) {
+            users = staticUsers;
+          }
+        }
+      } catch (e2) {}
     }
+
+    // 3. Combinar también con usuarios guardados localmente
+    try {
+      const localUsers = JSON.parse(localStorage.getItem('daganzo_users') || '[]');
+      if (Array.isArray(localUsers)) {
+        localUsers.forEach(lu => {
+          if (!users.some(u => u.email === lu.email)) {
+            users.push(lu);
+          }
+        });
+      }
+      const currentUser = JSON.parse(localStorage.getItem('daganzo_user') || 'null');
+      if (currentUser && currentUser.email && !users.some(u => u.email === currentUser.email)) {
+        users.push(currentUser);
+      }
+    } catch (e3) {}
+
+    this.adminLoadedUsers = users;
+
+    // Actualizar contadores y badges
+    const badge = document.getElementById('adminBadgeUsers');
+    if (badge) badge.textContent = users.length;
+    const kpiUsers = document.getElementById('kpiUsers');
+    if (kpiUsers) kpiUsers.textContent = users.length;
+
+    this.renderAdminUsersList(users);
+  }
+
+  renderAdminUsersList(users) {
+    const list = document.getElementById('adminUsersList');
+    if (!list) return;
+
+    let displayUsers = users || [];
+
+    // Filtrar por término de búsqueda si hay filtro activo
+    if (this.adminSearchFilter) {
+      const q = this.adminSearchFilter;
+      displayUsers = displayUsers.filter(u => {
+        const matchName = (u.name || '').toLowerCase().includes(q);
+        const matchEmail = (u.email || '').toLowerCase().includes(q);
+        const matchPhone = (u.phone || '').toLowerCase().includes(q);
+        const userHouses = this.getUserHouses(u);
+        const matchHouse = userHouses.some(h => (h.title || '').toLowerCase().includes(q) || (h.street || '').toLowerCase().includes(q));
+        return matchName || matchEmail || matchPhone || matchHouse;
+      });
+    }
+
+    if (displayUsers.length === 0) {
+      list.innerHTML = `
+        <div style="text-align: center; padding: 34px 10px; color: var(--text-muted); background: rgba(255,255,255,0.02); border-radius: var(--radius-lg); border: 1px dashed var(--border-glass);">
+          <div style="font-size: 2rem; margin-bottom: 8px;">👥</div>
+          <p style="color: #fff; font-weight: 600; margin-bottom: 4px;">No se encontraron vecinos registrados</p>
+          <p style="font-size: 0.8rem; color: #94a3b8;">${this.adminSearchFilter ? 'Ningún vecino coincide con la búsqueda.' : 'Los vecinos que se registren en la web aparecerán aquí automáticamente.'}</p>
+        </div>
+      `;
+      return;
+    }
+
+    list.innerHTML = displayUsers.map(u => {
+      const houses = this.getUserHouses(u);
+      const cleanPhone = (u.phone || '').replace(/\D/g, '');
+      const hasPhone = cleanPhone.length >= 9;
+
+      return `
+        <div class="admin-user-card" data-user-id="${u.id || u.email}">
+          <!-- Cabecera del Usuario -->
+          <div class="admin-user-header">
+            <div class="admin-user-avatar">👤</div>
+            <div class="admin-user-info">
+              <div class="admin-user-name-row">
+                <h3>${u.name || 'Vecino sin nombre'}</h3>
+                <span class="user-badge">${houses.length > 0 ? `🎃 ${houses.length} casa(s) inscrita(s)` : 'Sin casa aún'}</span>
+              </div>
+              <div class="admin-user-meta">
+                <span>✉️ Email: <b>${u.email || 'No indicado'}</b></span>
+                <span>📞 Teléfono: <b>${u.phone || 'No indicado'}</b></span>
+                <span>📅 Alta: ${new Date(u.createdAt || Date.now()).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+              </div>
+            </div>
+            <div class="admin-user-quick-actions">
+              ${hasPhone ? `
+                <a href="https://wa.me/34${cleanPhone}" target="_blank" rel="noopener" class="btn-whatsapp-action" title="Abrir chat de WhatsApp">
+                  💬 WhatsApp
+                </a>
+              ` : ''}
+              <button class="btn-admin-action btn-admin-reject" title="Eliminar este vecino" onclick="window.app.adminDeleteUser('${u.id || u.email}', '${(u.name || '').replace(/'/g, "\\'")}')">
+                🗑️ Eliminar Vecino
+              </button>
+            </div>
+          </div>
+
+          <!-- Casas Vinculadas al Usuario -->
+          <div class="admin-user-houses-box">
+            <div style="font-size: 0.78rem; font-weight: 700; color: #e2e8f0; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+              <span>🏚️ Casas inscritas por este vecino:</span>
+              <span style="font-size: 0.72rem; color: #ff8800;">${houses.length} registrada(s)</span>
+            </div>
+
+            ${houses.length === 0 ? `
+              <div class="admin-no-house-hint">
+                ℹ️ Este vecino se ha registrado pero aún no ha inscrito ninguna casa en el mapa.
+              </div>
+            ` : `
+              <div class="admin-user-houses-list">
+                ${houses.map(h => `
+                  <div class="admin-linked-house-row">
+                    <span class="house-icon">${h.icon || '🎃'}</span>
+                    <div class="house-details">
+                      <strong class="house-title">${h.title}</strong>
+                      <div class="house-address">📍 <b>${h.street}</b> • 🕒 ${h.hours || '19:00 - 22:30'}</div>
+                      <div class="house-tags">
+                        <span class="house-status-badge ${h.status === 'approved' ? 'status-approved' : 'status-pending'}">
+                          ${h.status === 'approved' ? '🏚️ Publicada en el mapa' : '⏳ Pendiente de moderación'}
+                        </span>
+                        <span class="house-cat-tag">Temática: ${h.category}</span>
+                      </div>
+                    </div>
+                    <div style="display: flex; gap: 6px; align-items: center;">
+                      <button class="btn-view-house-link" onclick="window.app.adminFocusHouse('${h.id}')" title="Ver en el mapa">
+                        🗺️ Ver
+                      </button>
+                      <button class="btn-icon-admin" onclick="window.app.openEditHouseModal('${h.id}')" title="Editar datos de esta casa">
+                        ✏️
+                      </button>
+                      <button class="btn-icon-admin btn-icon-delete" onclick="window.app.adminDeleteHouse('${h.id}')" title="Eliminar casa de este vecino">
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  getUserHouses(user) {
+    if (!user) return [];
+    const allHouses = this.store.getAll(false) || [];
+    return allHouses.filter(h => {
+      if (h.ownerId && (h.ownerId === user.id || h.ownerId === user.email)) return true;
+      if (h.owner && h.owner.email && user.email && h.owner.email.toLowerCase() === user.email.toLowerCase()) return true;
+      if (h.ownerContact && user.phone && h.ownerContact.replace(/\D/g, '') === user.phone.replace(/\D/g, '')) return true;
+      if (h.ownerName && user.name && h.ownerName.toLowerCase() === user.name.toLowerCase()) return true;
+      return false;
+    });
   }
 
   async adminDeleteUser(userId, userName) {
@@ -1588,21 +1680,46 @@ class HalloweenApp {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: userId })
       });
-      const data = await res.json();
-      if (data.ok) {
-        this.showToast(`🗑️ Usuario "${userName}" eliminado correctamente.`);
-        if (this.currentUser && (this.currentUser.id === userId || this.currentUser.email === userId)) {
-          this.currentUser = null;
-          localStorage.removeItem('daganzo_user');
-          this.updateUserSessionUI();
+      if (res.ok) {
+        const data = await res.json();
+        if (data.ok) {
+          this.showToast(`🗑️ Usuario "${userName}" eliminado correctamente.`);
         }
-        this.loadAdminUsers();
-      } else {
-        this.showToast(data.error || 'No se pudo eliminar el usuario');
       }
-    } catch (e) {
-      this.showToast('Error al conectar con el servidor');
+    } catch (e) {}
+
+    // Limpieza también en local
+    if (this.currentUser && (this.currentUser.id === userId || this.currentUser.email === userId)) {
+      this.currentUser = null;
+      localStorage.removeItem('daganzo_user');
+      this.updateUserSessionUI();
     }
+    try {
+      let localUsers = JSON.parse(localStorage.getItem('daganzo_users') || '[]');
+      localUsers = localUsers.filter(u => u.id !== userId && u.email !== userId);
+      localStorage.setItem('daganzo_users', JSON.stringify(localUsers));
+    } catch (e) {}
+
+    this.showToast(`🗑️ Vecino "${userName}" eliminado.`);
+    this.loadAdminUsers();
+  }
+
+  exportBackupJSON() {
+    const backupData = {
+      exportedAt: new Date().toISOString(),
+      version: 'Halloween Daganzo 2026',
+      totalHouses: this.store.houses.length,
+      houses: this.store.houses,
+      users: this.adminLoadedUsers || []
+    };
+    const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `backup_halloween_daganzo_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    this.showToast('📥 Copia de seguridad JSON descargada con éxito');
   }
 
   renderAdminView() {
@@ -1622,45 +1739,77 @@ class HalloweenApp {
 
     const pendingHouses = this.store.getPending();
     const approvedHouses = this.store.getApproved();
+    const candiesHouses = approvedHouses.filter(h => h.hasCandies);
+
+    // Actualizar KPIs superiores
+    const kpiApproved = document.getElementById('kpiApproved');
+    if (kpiApproved) kpiApproved.textContent = approvedHouses.length;
+    const kpiPending = document.getElementById('kpiPending');
+    if (kpiPending) kpiPending.textContent = pendingHouses.length;
+    const kpiCandies = document.getElementById('kpiCandies');
+    if (kpiCandies) kpiCandies.textContent = candiesHouses.length;
 
     const badgePending = document.getElementById('adminBadgePending');
     if (badgePending) badgePending.textContent = pendingHouses.length;
     const badgeApproved = document.getElementById('adminBadgeApproved');
     if (badgeApproved) badgeApproved.textContent = approvedHouses.length;
 
-    // Render Pending
+    // Cargar vecinos en segundo plano si aún no están cargados
+    if (!this.adminLoadedUsers) {
+      this.loadAdminUsers();
+    }
+
+    const q = this.adminSearchFilter || '';
+
+    // 1. Render Solicitudes Pendientes
     if (pendingList) {
-      if (pendingHouses.length === 0) {
+      let filteredPending = pendingHouses;
+      if (q) {
+        filteredPending = filteredPending.filter(h =>
+          (h.title || '').toLowerCase().includes(q) ||
+          (h.street || '').toLowerCase().includes(q) ||
+          (h.ownerName || '').toLowerCase().includes(q)
+        );
+      }
+
+      if (filteredPending.length === 0) {
         pendingList.innerHTML = `
-          <div style="text-align: center; padding: 34px 10px; color: var(--text-muted);">
-            <div style="font-size: 2.2rem; margin-bottom: 8px;">🎉</div>
-            <p style="color: #fff; font-weight: bold; margin-bottom: 4px;">¡No hay solicitudes pendientes!</p>
-            <p style="font-size: 0.78rem;">Todas las casas registradas han sido moderadas.</p>
+          <div style="text-align: center; padding: 34px 10px; color: var(--text-muted); background: rgba(255,255,255,0.02); border-radius: var(--radius-lg); border: 1px dashed var(--border-glass);">
+            <div style="font-size: 2.4rem; margin-bottom: 8px;">🎉</div>
+            <p style="color: #fff; font-weight: 700; margin-bottom: 4px;">¡No hay solicitudes pendientes!</p>
+            <p style="font-size: 0.8rem; color: #94a3b8;">${q ? 'Ninguna solicitud coincide con la búsqueda.' : 'Todas las casas inscritas por los vecinos han sido moderadas y aprobadas.'}</p>
           </div>
         `;
       } else {
-        pendingList.innerHTML = pendingHouses.map(h => {
+        pendingList.innerHTML = filteredPending.map(h => {
           const matched = HALLOWEEN_50_ICONS.find(i => i.id === h.iconId || i.emoji === h.icon);
           const iconEmoji = matched ? matched.emoji : (h.icon || '🎃');
-          const ownerInfo = h.owner ? `${h.owner.name} (${h.owner.phone || h.owner.email})` : 'Vecino no especificado';
+          const ownerContact = h.ownerContact || (h.owner ? (h.owner.phone || h.owner.email) : '');
+          const cleanPhone = (ownerContact || '').replace(/\D/g, '');
+          const hasPhone = cleanPhone.length >= 9;
 
           return `
-            <div class="admin-house-item admin-pending-card" data-id="${h.id}">
-              <div style="font-size: 1.6rem; width: 38px; text-align: center;">${iconEmoji}</div>
-              <img class="admin-thumb" src="${h.image}" alt="">
+            <div class="admin-house-item admin-pending-card" data-id="${h.id}" style="border-left: 4px solid #ff6b00;">
+              <div style="font-size: 1.8rem; width: 44px; text-align: center;">${iconEmoji}</div>
+              <img class="admin-thumb" src="${h.image}" alt="" style="width: 60px; height: 60px; border-radius: var(--radius-md);">
               <div class="admin-info">
-                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                  <h4>${h.title}</h4>
-                  <span class="admin-neighbor-pill">👤 ${ownerInfo}</span>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <h4 style="font-size: 1.05rem;">${h.title}</h4>
+                  <span class="user-badge" style="background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.4); color: #fbbf24;">⏳ Pendiente</span>
                 </div>
-                <p>📍 ${h.street} • 🕒 ${h.hours || '19:00 - 22:30'}</p>
-                <p style="font-size: 0.75rem; color: #a8a29e; margin-top: 3px; font-style: italic;">"${h.description || 'Sin descripción'}"</p>
+                <p>📍 <b>${h.street}</b> • 🕒 ${h.hours || '19:00 - 22:30'} • 🏷️ Temática: ${h.category}</p>
+                <div style="font-size: 0.76rem; color: #cbd5e1; margin-top: 4px; display: flex; gap: 10px; flex-wrap: wrap;">
+                  <span>👤 Vecino: <b>${h.ownerName || 'Anónimo'}</b></span>
+                  ${ownerContact ? `<span>📞 Contacto: <b>${ownerContact}</b></span>` : ''}
+                </div>
+                ${h.description ? `<p style="font-size: 0.75rem; color: #a8a29e; margin-top: 4px; font-style: italic;">"${h.description}"</p>` : ''}
               </div>
-              <div class="admin-btns" style="flex-direction: column; gap: 4px;">
-                <button class="btn-admin-approve" onclick="window.app.adminApproveHouse('${h.id}')">
+              <div class="admin-btns" style="flex-direction: column; gap: 6px; min-width: 140px;">
+                <button class="btn-admin-approve" onclick="window.app.adminApproveHouse('${h.id}')" style="padding: 8px 12px; font-size: 0.85rem; width: 100%;">
                   <span>✓</span> Aprobar y Publicar
                 </button>
-                <div style="display: flex; gap: 4px;">
+                <div style="display: flex; gap: 4px; width: 100%;">
+                  ${hasPhone ? `<a href="https://wa.me/34${cleanPhone}" target="_blank" rel="noopener" class="btn-icon-admin" style="color: #4ade80; flex: 1;" title="Hablar por WhatsApp">💬</a>` : ''}
                   <button class="btn-icon-admin" title="Ver en mapa" onclick="window.app.adminFocusHouse('${h.id}')" style="flex: 1;">👁️</button>
                   <button class="btn-icon-admin" title="Editar" onclick="window.app.openEditHouseModal('${h.id}')" style="flex: 1;">✏️</button>
                   <button class="btn-icon-admin btn-icon-delete" title="Rechazar" onclick="window.app.adminRejectHouse('${h.id}')" style="flex: 1;">🗑️</button>
@@ -1672,27 +1821,52 @@ class HalloweenApp {
       }
     }
 
-    // Render Approved
+    // 2. Render Casas Publicadas
     if (approvedList) {
-      if (approvedHouses.length === 0) {
-        approvedList.innerHTML = `<div style="text-align: center; padding: 30px; color: var(--text-muted);">No hay casas publicadas</div>`;
+      let filteredApproved = approvedHouses;
+      if (q) {
+        filteredApproved = filteredApproved.filter(h =>
+          (h.title || '').toLowerCase().includes(q) ||
+          (h.street || '').toLowerCase().includes(q) ||
+          (h.category || '').toLowerCase().includes(q) ||
+          (h.ownerName || '').toLowerCase().includes(q)
+        );
+      }
+
+      if (filteredApproved.length === 0) {
+        approvedList.innerHTML = `
+          <div style="text-align: center; padding: 34px 10px; color: var(--text-muted); background: rgba(255,255,255,0.02); border-radius: var(--radius-lg); border: 1px dashed var(--border-glass);">
+            <div style="font-size: 2.2rem; margin-bottom: 8px;">🏚️</div>
+            <p style="color: #fff; font-weight: 600; margin-bottom: 4px;">No hay casas publicadas en esta vista</p>
+            <p style="font-size: 0.8rem; color: #94a3b8;">${q ? 'Ninguna casa coincide con la búsqueda.' : 'Pulsa "➕ Nueva Casa" para añadir la primera o "🔄 Muestra" para cargar las de ejemplo.'}</p>
+          </div>
+        `;
       } else {
-        approvedList.innerHTML = approvedHouses.map(h => {
+        approvedList.innerHTML = filteredApproved.map(h => {
           const matched = HALLOWEEN_50_ICONS.find(i => i.id === h.iconId || i.emoji === h.icon);
           const iconEmoji = matched ? matched.emoji : (h.icon || '🎃');
+          const ownerContact = h.ownerContact || (h.owner ? (h.owner.phone || h.owner.email) : '');
+          const cleanPhone = (ownerContact || '').replace(/\D/g, '');
+          const hasPhone = cleanPhone.length >= 9;
 
           return `
             <div class="admin-house-item" data-id="${h.id}">
-              <div style="font-size: 1.4rem; width: 34px; text-align: center;">${iconEmoji}</div>
-              <img class="admin-thumb" src="${h.image}" alt="">
+              <div style="font-size: 1.6rem; width: 40px; text-align: center;">${iconEmoji}</div>
+              <img class="admin-thumb" src="${h.image}" alt="" style="width: 54px; height: 54px; border-radius: var(--radius-md);">
               <div class="admin-info">
-                <h4>${h.title}</h4>
-                <p>📍 ${h.street}</p>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <h4 style="font-size: 0.98rem;">${h.title}</h4>
+                  <span class="user-badge" style="background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.35); color: #34d399;">Publicada</span>
+                  <span class="house-cat-tag">Temática: ${h.category}</span>
+                </div>
+                <p style="margin-top: 3px;">📍 <b>${h.street}</b> • 🕒 ${h.hours || '19:00 - 22:30'}</p>
+                ${ownerContact ? `<div style="font-size: 0.74rem; color: #94a3b8; margin-top: 2px;">👤 ${h.ownerName || 'Vecino'}: ${ownerContact}</div>` : ''}
               </div>
-              <div class="admin-btns">
-                <button class="btn-icon-admin" title="Ver en mapa" onclick="window.app.adminFocusHouse('${h.id}')">👁️</button>
+              <div class="admin-btns" style="align-items: center;">
+                ${hasPhone ? `<a href="https://wa.me/34${cleanPhone}" target="_blank" rel="noopener" class="btn-icon-admin" style="color: #4ade80;" title="WhatsApp">💬</a>` : ''}
+                <button class="btn-icon-admin" title="Ver en el mapa" onclick="window.app.adminFocusHouse('${h.id}')">👁️</button>
                 <button class="btn-icon-admin" title="Editar datos" onclick="window.app.openEditHouseModal('${h.id}')">✏️</button>
-                <button class="btn-icon-admin btn-icon-delete" title="Eliminar casa" onclick="window.app.adminDeleteHouse('${h.id}')">🗑️</button>
+                <button class="btn-icon-admin btn-icon-delete" title="Eliminar casa permanentemente" onclick="window.app.adminDeleteHouse('${h.id}')">🗑️</button>
               </div>
             </div>
           `;
@@ -2707,6 +2881,27 @@ class HalloweenApp {
 
     document.getElementById('adminTabBtnUsers')?.addEventListener('click', () => {
       this.setAdminTab('users');
+    });
+
+    // Búsqueda en tiempo real del Panel de Administración
+    document.getElementById('adminSearchInput')?.addEventListener('input', (e) => {
+      this.adminSearchFilter = (e.target.value || '').trim().toLowerCase();
+      if (this.adminTab === 'users') {
+        this.renderAdminUsersList(this.adminLoadedUsers || []);
+      } else {
+        this.renderAdminView();
+      }
+    });
+
+    // Botón "+ Nueva Casa" desde Admin
+    document.getElementById('btnAdminAddNewHouse')?.addEventListener('click', () => {
+      this.closeModal('modalAdmin');
+      this.openApuntaOrAuth();
+    });
+
+    // Botón "Backup JSON" desde Admin
+    document.getElementById('btnAdminExportBackup')?.addEventListener('click', () => {
+      this.exportBackupJSON();
     });
 
     // 9.5 Registro y Login de Vecino
