@@ -170,7 +170,7 @@ const server = http.createServer(async (req, res) => {
     }
 
     // 4. ADMIN: RECHAZAR / ELIMINAR CASA
-    if (route === 'admin/reject' && req.method === 'POST') {
+    if ((route === 'admin/reject' || route === 'admin/delete' || route === 'admin/houses/delete') && req.method === 'POST') {
       const body = await parseBody(req);
       let houses = readJSON(HOUSES_FILE, []);
       const houseToDelete = houses.find(h => h.id === body.id);

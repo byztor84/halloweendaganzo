@@ -887,9 +887,14 @@
           <textarea id="editDesc" name="editDesc" class="form-control-textarea" rows="2"></textarea>
         </div>
 
-        <button type="submit" class="btn-cta-monumental" style="width: 100%; padding: 14px; font-size: 1.25rem; margin-bottom: 0;">
-          <span>💾 Guardar Cambios</span>
-        </button>
+        <div style="display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap;">
+          <button type="submit" class="btn-cta-monumental" style="flex: 2; min-width: 180px; padding: 14px; font-size: 1.15rem; margin-bottom: 0;">
+            <span>💾 Guardar Cambios</span>
+          </button>
+          <button type="button" id="btnAdminDeleteFromEditModal" class="btn-admin-action btn-admin-reject" style="flex: 1; min-width: 120px; padding: 14px; font-size: 0.95rem; justify-content: center; border-radius: var(--radius-xl);">
+            <span>🗑️ Eliminar</span>
+          </button>
+        </div>
       </form>
     </div>
   </div>

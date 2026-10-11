@@ -312,7 +312,7 @@ class HouseStore {
     return null;
   }
 
-  async reject(id) {
+  async delete(id) {
     this.houses = this.houses.filter(h => h.id !== id);
     this.save(this.houses);
     try {
@@ -322,6 +322,10 @@ class HouseStore {
         body: JSON.stringify({ id })
       });
     } catch (e) {}
+  }
+
+  async reject(id) {
+    return this.delete(id);
   }
 
   async update(id, updatedData) {
@@ -1550,9 +1554,14 @@ class HalloweenApp {
                               <span class="house-cat-tag">Temática: ${h.category}</span>
                             </div>
                           </div>
-                          <button class="btn-view-house-link" onclick="window.app.adminFocusHouse('${h.id}')" title="Ver en el mapa">
-                            🗺️ Ver en Mapa
-                          </button>
+                          <div style="display: flex; gap: 6px; align-items: center;">
+                            <button class="btn-view-house-link" onclick="window.app.adminFocusHouse('${h.id}')" title="Ver en el mapa">
+                              🗺️ Ver en Mapa
+                            </button>
+                            <button class="btn-icon-admin btn-icon-delete" onclick="window.app.adminDeleteHouse('${h.id}')" title="Eliminar casa de este vecino" style="padding: 6px 10px; font-size: 0.85rem; border-radius: var(--radius-sm); border: 1px solid rgba(239, 68, 68, 0.4); cursor: pointer;">
+                              🗑️
+                            </button>
+                          </div>
                         </div>
                       `).join('')}
                     </div>
@@ -1923,14 +1932,16 @@ class HalloweenApp {
     }
   }
 
-  adminDeleteHouse(id) {
+  async adminDeleteHouse(id) {
     const house = this.store.getById(id);
-    if (!house) return;
+    const title = house ? house.title : 'esta casa';
+    const freedIcon = house?.icon || '🎃';
 
-    if (confirm(`¿Seguro que deseas eliminar permanentemente "${house.title}"?`)) {
-      const freedIcon = house.icon || '🎃';
-      this.store.delete(id);
+    if (confirm(`¿Seguro que deseas eliminar permanentemente "${title}"?`)) {
+      await this.store.delete(id);
       this.refreshMapMarkers();
+      this.renderSidebarHouses();
+      this.updateGeneralCounters();
       this.renderAdminView();
       if (this.selectedHouse?.id === id) {
         this.closeHouseCard();
@@ -2662,6 +2673,14 @@ class HalloweenApp {
     document.getElementById('formEditHouse')?.addEventListener('submit', (e) => {
       e.preventDefault();
       this.saveEditedHouse();
+    });
+
+    document.getElementById('btnAdminDeleteFromEditModal')?.addEventListener('click', () => {
+      if (this.editingHouseId) {
+        const idToDelete = this.editingHouseId;
+        this.closeModal('modalEditHouse');
+        this.adminDeleteHouse(idToDelete);
+      }
     });
 
     // 9. Admin y Pestañas
