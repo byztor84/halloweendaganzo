@@ -392,17 +392,23 @@ const server = http.createServer(async (req, res) => {
     // 8. ADMIN: ELIMINAR USUARIO REGISTRADO
     if (route === 'admin/users/delete' && req.method === 'POST') {
       const body = await parseBody(req);
-      if (!body.id) {
-        return sendJSON(res, 400, { ok: false, error: 'Falta el ID del usuario a eliminar' });
+      const targetId = body.id || body.email;
+      const targetEmail = (body.email || '').toLowerCase().trim();
+      if (!targetId && !targetEmail) {
+        return sendJSON(res, 400, { ok: false, error: 'Falta el ID o email del usuario a eliminar' });
       }
 
       let users = readJSON(USERS_FILE, []);
-      const userToDelete = users.find(u => u.id === body.id || u.email === body.id);
+      const userToDelete = users.find(u => 
+        (targetId && (u.id === targetId || u.email === targetId)) ||
+        (targetEmail && u.email && u.email.toLowerCase() === targetEmail)
+      );
+
       if (!userToDelete) {
         return sendJSON(res, 404, { ok: false, error: 'Usuario no encontrado en la base de datos' });
       }
 
-      users = users.filter(u => u.id !== userToDelete.id && u.email !== userToDelete.email);
+      users = users.filter(u => u.id !== userToDelete.id && u.email.toLowerCase() !== userToDelete.email.toLowerCase());
       writeJSON(USERS_FILE, users);
 
       return sendJSON(res, 200, {
