@@ -165,16 +165,38 @@ const DEFAULT_HOUSES = [
 class HouseStore {
   constructor() {
     this.storageKey = 'daganzo_halloween_houses_v4';
+    this.deletedKey = 'daganzo_deleted_houses_v1';
     this.houses = this.load();
     this.syncWithServer();
   }
 
+  getDeletedIds() {
+    try {
+      const raw = localStorage.getItem(this.deletedKey);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  saveDeletedId(id) {
+    try {
+      const ids = this.getDeletedIds();
+      if (!ids.includes(id)) {
+        ids.push(id);
+        localStorage.setItem(this.deletedKey, JSON.stringify(ids));
+      }
+    } catch (e) {}
+  }
+
   load() {
     const raw = localStorage.getItem(this.storageKey);
+    const deletedIds = this.getDeletedIds();
     let loaded = [];
     if (!raw) {
-      this.save(DEFAULT_HOUSES);
-      return [...DEFAULT_HOUSES];
+      const initial = DEFAULT_HOUSES.filter(h => !deletedIds.includes(h.id));
+      this.save(initial);
+      return initial;
     }
     try {
       loaded = JSON.parse(raw);
@@ -182,6 +204,9 @@ class HouseStore {
       console.error("Error al parsear casas:", e);
       return [...DEFAULT_HOUSES];
     }
+
+    // Filtrar las casas que hayan sido eliminadas por el administrador
+    loaded = loaded.filter(h => !deletedIds.includes(h.id));
 
     // Asegurar status y compatibilidad de iconId con los 50 iconos
     loaded = loaded.map(h => {
@@ -202,12 +227,14 @@ class HouseStore {
   }
 
   async syncWithServer() {
+    const deletedIds = this.getDeletedIds();
     try {
       const res = await fetch('/api/houses?all=true');
       if (res.ok) {
         const data = await res.json();
         if (data.ok && Array.isArray(data.houses)) {
-          this.houses = data.houses;
+          // Filtrar cualquier casa que esté en la lista de eliminadas localmente
+          this.houses = data.houses.filter(h => !deletedIds.includes(h.id));
           this.save(this.houses);
           if (window.app) {
             window.app.refreshMapMarkers();
@@ -224,9 +251,21 @@ class HouseStore {
       const staticRes = await fetch('./data/houses.json');
       if (staticRes.ok) {
         const staticHouses = await staticRes.json();
-        if (Array.isArray(staticHouses) && staticHouses.length > 0) {
-          this.houses = staticHouses;
-          this.save(this.houses);
+        if (Array.isArray(staticHouses)) {
+          // No sobreescribir si el usuario ha eliminado casas o tiene datos locales más recientes
+          const filtered = staticHouses.filter(h => !deletedIds.includes(h.id));
+          // Solo actualizar si hay casas nuevas que no tengamos
+          const currentIds = new Set(this.houses.map(h => h.id));
+          let hasNew = false;
+          filtered.forEach(h => {
+            if (!currentIds.has(h.id) && !deletedIds.includes(h.id)) {
+              this.houses.push(h);
+              hasNew = true;
+            }
+          });
+          if (hasNew) {
+            this.save(this.houses);
+          }
           if (window.app) {
             window.app.refreshMapMarkers();
             window.app.renderSidebarHouses();
@@ -235,21 +274,7 @@ class HouseStore {
         }
       }
     } catch (err) {
-      try {
-        const staticRes = await fetch('./data/houses.json');
-        if (staticRes.ok) {
-          const staticHouses = await staticRes.json();
-          if (Array.isArray(staticHouses) && staticHouses.length > 0) {
-            this.houses = staticHouses;
-            this.save(this.houses);
-            if (window.app) {
-              window.app.refreshMapMarkers();
-              window.app.renderSidebarHouses();
-              window.app.updateGeneralCounters();
-            }
-          }
-        }
-      } catch (e2) {}
+      console.warn('Sync server/static note:', err);
     }
   }
 
@@ -313,6 +338,7 @@ class HouseStore {
   }
 
   async delete(id) {
+    this.saveDeletedId(id);
     this.houses = this.houses.filter(h => h.id !== id);
     this.save(this.houses);
     try {
@@ -346,6 +372,9 @@ class HouseStore {
   }
 
   async resetDefaults() {
+    try {
+      localStorage.removeItem(this.deletedKey);
+    } catch (e) {}
     this.save([...DEFAULT_HOUSES]);
     try {
       await fetch('/api/admin/reset', { method: 'POST' });
@@ -1520,18 +1549,26 @@ class HalloweenApp {
       } catch (e2) {}
     }
 
+    // Filtrar usuarios eliminados previamente por el administrador
+    let deletedUserIds = [];
+    try {
+      deletedUserIds = JSON.parse(localStorage.getItem('daganzo_deleted_users_v1') || '[]');
+    } catch (e) {}
+
+    users = users.filter(u => !deletedUserIds.includes(u.id) && !deletedUserIds.includes(u.email));
+
     // 3. Combinar también con usuarios guardados localmente
     try {
       const localUsers = JSON.parse(localStorage.getItem('daganzo_users') || '[]');
       if (Array.isArray(localUsers)) {
         localUsers.forEach(lu => {
-          if (!users.some(u => u.email === lu.email)) {
+          if (!deletedUserIds.includes(lu.id) && !deletedUserIds.includes(lu.email) && !users.some(u => u.email === lu.email)) {
             users.push(lu);
           }
         });
       }
       const currentUser = JSON.parse(localStorage.getItem('daganzo_user') || 'null');
-      if (currentUser && currentUser.email && !users.some(u => u.email === currentUser.email)) {
+      if (currentUser && currentUser.email && !deletedUserIds.includes(currentUser.id) && !deletedUserIds.includes(currentUser.email) && !users.some(u => u.email === currentUser.email)) {
         users.push(currentUser);
       }
     } catch (e3) {}
@@ -1686,6 +1723,13 @@ class HalloweenApp {
           this.showToast(`🗑️ Usuario "${userName}" eliminado correctamente.`);
         }
       }
+    } catch (e) {}
+
+    // Guardar en lista negra de eliminados
+    try {
+      let deletedList = JSON.parse(localStorage.getItem('daganzo_deleted_users_v1') || '[]');
+      if (userId && !deletedList.includes(userId)) deletedList.push(userId);
+      localStorage.setItem('daganzo_deleted_users_v1', JSON.stringify(deletedList));
     } catch (e) {}
 
     // Limpieza también en local
